@@ -4,8 +4,8 @@
 ///////////////////////////////
 
 // FRAME Globals
-const c_width = 1000;
-const c_height = 700;
+const c_width = 900;
+const c_height = 600;
 
 // Global game settings
 let Settings = {
@@ -13,12 +13,12 @@ let Settings = {
   ENABLE_SOUND : false,
   BALL_DIAMATER : 20,
   ROW_COUNT : 4,
-  COL_COUNT : 12,
+  COL_COUNT : 10,
   PADDLE_HEIGHT : 16,
   PADDLE_WIDTH : 110,
-  BRICK_HEIGHT : 30,
+  BRICK_HEIGHT : 28,
   // Sets the spacing between bricks but also invisible wall around the game area
-  SPACING : 5,
+  SPACING : 3,
   // Sets the bounce factor when the ball hits the paddle. Higher values means more effect on x-speed on bounce.
   XSPEED_BOUNCE_FACTOR : 0.10,
   BALL_XSPEED_INIT : 3,
@@ -91,6 +91,10 @@ function setupEffects(){
     'bigpaddle',
     function() { paddle.width = Settings.PADDLE_WIDTH*1.5;},
     function() { paddle.width = Settings.PADDLE_WIDTH;},
+    function() { 
+      fill(10, 50, 240, 150);
+      rect(paddle.x, paddle.y, paddle.width, paddle.height);
+    },
     10,   
   )
 }
@@ -211,6 +215,10 @@ function render(){
 
   ball.render();
   paddle.render();
+
+  currentEffects.forEach(effect => {
+    effect.effect.render();
+  });
 }
 
 function renderScore(){
@@ -258,6 +266,7 @@ class Brick extends GameObject {
     super(x, y, w, h);
     this.life = life;
     this.effect = effect;
+
   }
 
   render() {
@@ -275,8 +284,8 @@ class Brick extends GameObject {
     else{
       fill(25);
     }
-    textSize(18);
-    text(this.life, this.x+this.width/2-5, this.y+21);
+    textSize(14);
+    text(this.life, this.x+this.width/2-5, this.y+20);
   }
 
   applyEffect(){
@@ -320,11 +329,13 @@ class Ball extends GameObject {
 class Paddle extends GameObject{
   constructor(x, y, w,h) {
     super(x,y,w,h);
+    this.displayWidth = w;
+    this.displayHeight = h;
   }
 
   render() {
     fill(245);
-    rect(this.x, this.y, this.width, this.height);
+    rect(this.x, this.y, this.displayWidth, this.displayHeight);
   }
 
   move(dx){
@@ -333,10 +344,11 @@ class Paddle extends GameObject{
 }
 
 class Effect {
-  constructor(id, effectFunc, removeEffectFunc, timeout) {
+  constructor(id, effectFunc, removeEffectFunc, renderFunc, timeout) {
     this.id = id;
     this.effectFunc = effectFunc;
     this.removeEffectFunc = removeEffectFunc;
+    this.renderFunc = renderFunc;
     this.timeout = timeout;
     this.active = false;
     this.timer = null;
@@ -359,5 +371,10 @@ class Effect {
     e.removeEffectFunc();
     e.active = false;
     currentEffects.splice(currentEffects.indexOf(e), 1);
+  }
+
+  render() {
+    if(this.active && this.renderFunc !== null)
+      this.renderFunc();
   }
 }
