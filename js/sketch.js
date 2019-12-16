@@ -4,26 +4,27 @@
 ///////////////////////////////
 
 // FRAME Globals
-const c_width = 1200;
-const c_height = 800;
+const c_width = 1000;
+const c_height = 700;
 
 // Global game settings
 let Settings = {
   // Enables the sound for the whole game
   ENABLE_SOUND : false,
-  BALL_DIAMATER : 30,
-  ROW_COUNT : 5,
+  BALL_DIAMATER : 20,
+  ROW_COUNT : 4,
   COL_COUNT : 12,
   PADDLE_HEIGHT : 16,
-  PADDLE_WIDTH : 125,
-  BRICK_HEIGHT : 35,
+  PADDLE_WIDTH : 110,
+  BRICK_HEIGHT : 30,
   // Sets the spacing between bricks but also invisible wall around the game area
   SPACING : 5,
   // Sets the bounce factor when the ball hits the paddle. Higher values means more effect on x-speed on bounce.
-  XSPEED_BOUNCE_FACTOR : 0.06,
-  BALL_XSPEED_INIT : 2,
+  XSPEED_BOUNCE_FACTOR : 0.10,
+  BALL_XSPEED_INIT : 3,
   BALL_YSPEED_INIT : -9,
-  PADDLE_SPEED : 10,
+  PADDLE_SPEED : 12,
+  EFFECT_PERCENT: 12,
   PLAYER_LIFE : 3
 };
 
@@ -104,10 +105,10 @@ function initGame() {
   for (let i = 0; i < Settings.COL_COUNT; i++) {
     for(let j = 0; j < Settings.ROW_COUNT; j++){
       let randomNr = Math.floor(Math.random() * 100);
-      let addEffect = randomNr <= 7;  // 7% chance of applying the effect
+      let addEffect = randomNr <= Settings.EFFECT_PERCENT;  // X% chance of applying the effect
       bricks.push(new Brick(
         i * w + i * Settings.SPACING + Settings.SPACING, 
-        Settings.SPACING + Settings.BRICK_HEIGHT*j + Settings.SPACING*j,
+        Settings.SPACING + Settings.BRICK_HEIGHT*j + Settings.SPACING*j + Settings.BRICK_HEIGHT,
         w, 
         Settings.BRICK_HEIGHT,
         Settings.ROW_COUNT - j,
@@ -182,6 +183,7 @@ function logic(){
 
   if(collision){
     ball.dy*=-1;
+    ball.dy*=1.05;
   }
 
   if(ball.checkCollitionWallsX()){
@@ -201,9 +203,7 @@ function logic(){
 function render(){
   background(10);
 
-  fill(20);
-  textSize(100);
-  text(score, c_width/2-20, c_height/2+72/2);
+  renderScore();
 
   bricks.forEach(brick => {
     brick.render();
@@ -211,6 +211,12 @@ function render(){
 
   ball.render();
   paddle.render();
+}
+
+function renderScore(){
+  fill(40);
+  textSize(100);
+  text(score, c_width/2-20, c_height/2+72/2);
 }
 
 function keyPressed() {
@@ -261,12 +267,22 @@ class Brick extends GameObject {
     if(this.effect !== null){
       fill(255, 255,255, 190);
       rect(this.x, this.y, this.width, this.height);
-    }    
+    }  
+    
+    if(this.effect === null){
+      fill(255);
+    }
+    else{
+      fill(25);
+    }
+    textSize(18);
+    text(this.life, this.x+this.width/2-5, this.y+21);
   }
 
   applyEffect(){
     if(this.effect !== undefined && this.effect !== null){
       this.effect.apply();
+      this.effect = null; // Remove the effect reference - it should only apply once
     }
   }
 }
