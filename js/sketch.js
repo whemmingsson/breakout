@@ -5,29 +5,7 @@
 
 // FRAME Globals
 const c_width = 900;
-const c_height = 600;
-
-// Global game settings
-let Settings = {
-  // Enables the sound for the whole game
-  ENABLE_SOUND : false,
-  BALL_DIAMATER : 20,
-  ROW_COUNT : 4,
-  COL_COUNT : 10,
-  PADDLE_HEIGHT : 16,
-  PADDLE_WIDTH : 110,
-  BRICK_HEIGHT : 28,
-  // Sets the spacing between bricks but also invisible wall around the game area
-  SPACING : 3,
-  // Sets the bounce factor when the ball hits the paddle. Higher values means more effect on x-speed on bounce.
-  XSPEED_BOUNCE_FACTOR : 0.10,
-  BALL_XSPEED_INIT : 3,
-  BALL_YSPEED_INIT : -9,
-  PADDLE_SPEED : 12,
-  // Total chanche of adding an effect to a brick
-  EFFECT_PERCENT: 20,
-  PLAYER_LIFE : 3
-};
+const c_height = 620;
 
 let Keys = {
   RESET : 82, // r/R
@@ -46,7 +24,7 @@ let gameOver = false;
 let ballOnPaddle = true;
 let gamePaused = false;
 let score = 0;
-let playerLife = Settings.PLAYER_LIFE;
+let playerLife = PLAYER_LIFE;
 let currentBallSpeed = {};
 
 // Effects / powerups
@@ -58,7 +36,7 @@ let bigPaddleEffect, bigBallEffect;
 let bounceSound, scoreSound, gameOverSound;
 
 function preload() {
-    if(Settings.ENABLE_SOUND) {
+    if(ENABLE_SOUND) {
       bounceSound = loadSound('sounds/bounce.m4a');
       scoreSound = loadSound('sounds/score.m4a');
       gameOverSound = loadSound('sounds/gameover.m4a');
@@ -92,12 +70,8 @@ function setup() {
 function setupEffects(){
   bigPaddleEffect = new Effect(
     'bigpaddle',
-    function() { paddle.width = Settings.PADDLE_WIDTH*1.5;},
-    function() { paddle.width = Settings.PADDLE_WIDTH;},
-    // function() { 
-    //   fill(10, 50, 240, 150);
-    //   rect(paddle.x, paddle.y, paddle.width, paddle.height);
-    // },
+    function() { paddle.width = PADDLE_WIDTH*1.5;},
+    function() { paddle.width = PADDLE_WIDTH;},
     null,
     10,   
   )
@@ -113,16 +87,16 @@ function setupEffects(){
   slowBallEffect = new Effect(
     'slowball',
     function() { 
-      currentBallSpeed = {dx:ball.dx, dy:ball.dy}; 
+      currentBallSpeed = {dx:ball.dx, dy:Math.abs(ball.dy)}; 
       ball.dy = ball.dy*0.5;
     },
-    function() { ball.dy = currentBallSpeed.dy;},
+    function() { ball.dy = (ball.dy/Math.abs(ball.dy)) * currentBallSpeed.dy;},
     null,
     5,   
   )
 
   effects.push(bigPaddleEffect);
-  effects.push(bigBallEffect);
+  //effects.push(bigBallEffect);
   effects.push(slowBallEffect);
 }
 
@@ -131,54 +105,43 @@ function initGame() {
   ballOnPaddle = true;
   bricks = [];
 
-  let w = (c_width - (Settings.COL_COUNT+1) * Settings.SPACING) / Settings.COL_COUNT;
+  let w = (c_width - (COL_COUNT+1) * SPACING) / COL_COUNT;
 
-  for (let i = 0; i < Settings.COL_COUNT; i++) {
-    for(let j = 0; j < Settings.ROW_COUNT; j++){
+  for (let i = 0; i < COL_COUNT; i++) {
+    for(let j = 0; j < ROW_COUNT; j++){
 
       bricks.push(new Brick(
-        i * w + i * Settings.SPACING + Settings.SPACING, 
-        Settings.SPACING + Settings.BRICK_HEIGHT*j + Settings.SPACING*j + Settings.BRICK_HEIGHT,
+        i * w + i * SPACING + SPACING, 
+        SPACING + BRICK_HEIGHT*j + SPACING*j,
         w, 
-        Settings.BRICK_HEIGHT,
-        Settings.ROW_COUNT - j,
+        BRICK_HEIGHT,
+        ROW_COUNT - j,
         getRandomEffect()
       ));   
     }
   }
 
-  paddle = new Paddle(c_width / 2 - Settings.PADDLE_WIDTH/2, c_height-40, Settings.PADDLE_WIDTH, Settings.PADDLE_HEIGHT);
-  ball = new Ball(paddle.x+paddle.width/2 - Settings.BALL_DIAMATER/2, paddle.y-Settings.BALL_DIAMATER-1, Settings.BALL_DIAMATER);
+  paddle = new Paddle(c_width / 2 - PADDLE_WIDTH/2, c_height-60, PADDLE_WIDTH, PADDLE_HEIGHT);
+  ball = new Ball(paddle.x+paddle.width/2 - BALL_DIAMATER/2, paddle.y-BALL_DIAMATER-1, BALL_DIAMATER);
 
   score = 0;
-  playerLife = Settings.PLAYER_LIFE;
+  playerLife = PLAYER_LIFE;
 }
 
-function getRandomEffect(){
-  let randomNr = Math.floor(Math.random() * 100);
-  let addEffect = randomNr <= Settings.EFFECT_PERCENT;  // X% chance of applying the effect
-
-  if(!addEffect)
-    return null;
-
-  let randomEffectPos = Math.floor(Math.random() * effects.length);
-
-  return effects[randomEffectPos];
-
+function getRandomEffect() {
+  return Math.floor(Math.random() * 100) <= EFFECT_PERCENT ? effects[Math.floor(Math.random() * effects.length)] : null;
 }
 
 // DRAW: Run EVERY FRAME UPDATE
 function draw() {
-  if(gameOver)
+  //renderGameOver();
+  if(gameOver) {
+    renderGameOver();
     return;
+  }
 
   if(gamePaused){
-    render();  
-    fill(0,0,0, 200);
-    rect(0,0, c_width, c_height);
-    textSize(200);
-    fill(255);
-    text("PAUSED", 220, c_height/2+200/2 - 40);
+    renderPaused();
     return;
   }
 
@@ -187,18 +150,19 @@ function draw() {
 }
 
 function logic(){
-  if(keyIsDown(LEFT_ARROW) && paddle.x > Settings.SPACING){
+  if(keyIsDown(LEFT_ARROW) && paddle.x > SPACING){
     paddle.move(-1);
   }
-  else if(keyIsDown(RIGHT_ARROW) && paddle.x + paddle.width < c_width - Settings.SPACING){
+  else if(keyIsDown(RIGHT_ARROW) && paddle.x + paddle.width < c_width - SPACING){
     paddle.move(1);
   }
 
-  if(!ballOnPaddle)
+  if(!ballOnPaddle) {
     ball.move();
+  }
   else {
-    ball.x = paddle.x+paddle.width/2 - Settings.BALL_DIAMATER/2;
-    ball.y = paddle.y-Settings.BALL_DIAMATER-1;
+    ball.x = paddle.x+paddle.width/2 - BALL_DIAMATER/2;
+    ball.y = paddle.y-BALL_DIAMATER-1;
   }
 
   let collision = false;
@@ -206,7 +170,7 @@ function logic(){
   if(collisionHelper.collidesPaddle(ball, paddle)) {
       maybePlaySound(bounceSound);
       ball.dy*=-1;
-      ball.dx += (ball.x - (paddle.x + paddle.width / 2))*Settings.XSPEED_BOUNCE_FACTOR;
+      ball.dx += (ball.x - (paddle.x + paddle.width / 2))*XSPEED_BOUNCE_FACTOR;
    }
 
   for(var i = bricks.length-1; i >= 0; i--){
@@ -216,7 +180,7 @@ function logic(){
       collision = true;
       b.applyEffect();
       score++;
-      if(!toRemove.some(e =>e == i))
+      if(!toRemove.some(e => e == i))
         b.life--;
         if(b.life == 0) {
           bricks.splice(i, 1);
@@ -227,7 +191,6 @@ function logic(){
   if(collision){
     ball.dy*=-1;
     ball.dy+=0.5;
-    //paddle.updateSpeedFactor(paddle.speedFactor * 1.1);
     paddle.updateSpeed();
   }
 
@@ -240,8 +203,16 @@ function logic(){
   }
 
   if(ball.checkOutOfBounds()){
-    gameOver = true;
-    maybePlaySound(gameOverSound);
+     playerLife --;
+      if(playerLife == 0){
+        gameOver = true;
+        maybePlaySound(gameOverSound);
+      }
+      else {
+        paddle = new Paddle(c_width / 2 - PADDLE_WIDTH/2, c_height-60, PADDLE_WIDTH, PADDLE_HEIGHT);
+        ball = new Ball(paddle.x+paddle.width/2 - BALL_DIAMATER/2, paddle.y-BALL_DIAMATER-1, BALL_DIAMATER);
+        ballOnPaddle = true;
+      }
   }
 }
 
@@ -249,6 +220,7 @@ function render(){
   background(10);
 
   renderScore();
+  renderLife();
 
   bricks.forEach(brick => {
     brick.render();
@@ -264,9 +236,37 @@ function render(){
 }
 
 function renderScore(){
-  fill(40);
-  textSize(100);
-  text(score, c_width/2-20, c_height/2+72/2);
+  fill(60);
+  textSize(30);
+  text("Score: " + score, 12, c_height-12);
+}
+
+function renderLife(){
+  fill("#e76f51");
+  textSize(30);
+
+  for(let i = 0; i < playerLife; i++){
+    text("️❤" , c_width-38-i*32, c_height-12);
+  }
+  
+}
+
+function renderPaused(){
+  render();  
+  fill(0,0,0, 200);
+  rect(0,0, c_width, c_height);
+  textSize(180);
+  fill(255);
+  text("PAUSED", 120, c_height/2+200/2 - 40);
+}
+
+function renderGameOver(){
+  //render();  
+  //fill(0,0,0, 200);
+  //rect(0,0, c_width, c_height);
+  textSize(120);
+  fill("#e76f51");
+  text("GAME OVER", 100, c_height/2 + 60);
 }
 
 function keyPressed() {
@@ -285,7 +285,7 @@ function keyPressed() {
 }
 
 function maybePlaySound(sound){
-  if(Settings.ENABLE_SOUND)
+  if(ENABLE_SOUND)
     sound.play();
 }
 
@@ -327,7 +327,6 @@ class Brick extends GameObject {
     super(x, y, w, h);
     this.life = life;
     this.effect = effect;
-
   }
 
   render() {
@@ -360,8 +359,8 @@ class Brick extends GameObject {
 class Ball extends GameObject {
   constructor(x, y, w) {
     super(x,y, w, w);
-    this.dx = Settings.BALL_XSPEED_INIT;
-    this.dy = Settings.BALL_YSPEED_INIT; 
+    this.dx = BALL_XSPEED_INIT;
+    this.dy = BALL_YSPEED_INIT; 
   }
 
   render() {
@@ -380,15 +379,15 @@ class Ball extends GameObject {
   }
 
   checkCollitionWallsX(){
-    return this.x + this.width > width - Settings.SPACING || this.x < Settings.SPACING
+    return this.x + this.width > width - SPACING || this.x < SPACING
   }
 
   checkCollitionWallsY(){
-    return this.y < Settings.SPACING;
+    return this.y < SPACING;
   }
 
   checkOutOfBounds() {
-    return this.y + this.width > height - Settings.SPACING;
+    return this.y + this.width > height - SPACING;
   }
 }
 
@@ -398,7 +397,7 @@ class Paddle extends GameObject{
     this.displayWidth = w;
     this.displayHeight = h;
     this.speedFactor = 1;
-    this.dx = Settings.PADDLE_SPEED;
+    this.dx = PADDLE_SPEED;
   }
 
   render() {
