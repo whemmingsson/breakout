@@ -24,7 +24,8 @@ let Settings = {
   BALL_XSPEED_INIT : 3,
   BALL_YSPEED_INIT : -9,
   PADDLE_SPEED : 12,
-  EFFECT_PERCENT: 12,
+  // Total chanche of adding an effect to a brick
+  EFFECT_PERCENT: 20,
   PLAYER_LIFE : 3
 };
 
@@ -46,10 +47,12 @@ let ballOnPaddle = true;
 let gamePaused = false;
 let score = 0;
 let playerLife = Settings.PLAYER_LIFE;
+let currentBallSpeed = {};
 
 // Effects / powerups
+let effects = [];
 let currentEffects = [];
-let bigPaddleEffect;
+let bigPaddleEffect, bigBallEffect;
 
 // Sound effects
 let bounceSound, scoreSound, gameOverSound;
@@ -91,12 +94,36 @@ function setupEffects(){
     'bigpaddle',
     function() { paddle.width = Settings.PADDLE_WIDTH*1.5;},
     function() { paddle.width = Settings.PADDLE_WIDTH;},
-    function() { 
-      fill(10, 50, 240, 150);
-      rect(paddle.x, paddle.y, paddle.width, paddle.height);
-    },
+    // function() { 
+    //   fill(10, 50, 240, 150);
+    //   rect(paddle.x, paddle.y, paddle.width, paddle.height);
+    // },
+    null,
     10,   
   )
+
+  bigBallEffect = new Effect(
+    'bigball',
+    function() { ball.setDiameter(ball.width*2);},
+    function() { ball.setDiameter(ball.BALL_DIAMATER);},
+    null,
+    10,   
+  )
+
+  slowBallEffect = new Effect(
+    'slowball',
+    function() { 
+      currentBallSpeed = {dx:ball.dx, dy:ball.dy}; 
+      ball.dy = ball.dy*0.5;
+    },
+    function() { ball.dy = currentBallSpeed.dy;},
+    null,
+    5,   
+  )
+
+  effects.push(bigPaddleEffect);
+  effects.push(bigBallEffect);
+  effects.push(slowBallEffect);
 }
 
 function initGame() {
@@ -108,15 +135,14 @@ function initGame() {
 
   for (let i = 0; i < Settings.COL_COUNT; i++) {
     for(let j = 0; j < Settings.ROW_COUNT; j++){
-      let randomNr = Math.floor(Math.random() * 100);
-      let addEffect = randomNr <= Settings.EFFECT_PERCENT;  // X% chance of applying the effect
+
       bricks.push(new Brick(
         i * w + i * Settings.SPACING + Settings.SPACING, 
         Settings.SPACING + Settings.BRICK_HEIGHT*j + Settings.SPACING*j + Settings.BRICK_HEIGHT,
         w, 
         Settings.BRICK_HEIGHT,
         Settings.ROW_COUNT - j,
-        addEffect ? bigPaddleEffect : null
+        getRandomEffect()
       ));   
     }
   }
@@ -126,6 +152,19 @@ function initGame() {
 
   score = 0;
   playerLife = Settings.PLAYER_LIFE;
+}
+
+function getRandomEffect(){
+  let randomNr = Math.floor(Math.random() * 100);
+  let addEffect = randomNr <= Settings.EFFECT_PERCENT;  // X% chance of applying the effect
+
+  if(!addEffect)
+    return null;
+
+  let randomEffectPos = Math.floor(Math.random() * effects.length);
+
+  return effects[randomEffectPos];
+
 }
 
 // DRAW: Run EVERY FRAME UPDATE
@@ -149,10 +188,10 @@ function draw() {
 
 function logic(){
   if(keyIsDown(LEFT_ARROW) && paddle.x > Settings.SPACING){
-    paddle.move(-Settings.PADDLE_SPEED);
+    paddle.move(-1);
   }
   else if(keyIsDown(RIGHT_ARROW) && paddle.x + paddle.width < c_width - Settings.SPACING){
-    paddle.move(Settings.PADDLE_SPEED);
+    paddle.move(1);
   }
 
   if(!ballOnPaddle)
@@ -187,7 +226,9 @@ function logic(){
 
   if(collision){
     ball.dy*=-1;
-    ball.dy*=1.05;
+    ball.dy+=0.5;
+    //paddle.updateSpeedFactor(paddle.speedFactor * 1.1);
+    paddle.updateSpeed();
   }
 
   if(ball.checkCollitionWallsX()){
@@ -216,9 +257,10 @@ function render(){
   ball.render();
   paddle.render();
 
-  currentEffects.forEach(effect => {
-    effect.effect.render();
-  });
+  // Under development
+  // currentEffects.forEach(effect => {
+  //   effect.effect.render();
+  // });
 }
 
 function renderScore(){
@@ -256,8 +298,27 @@ let collisionHelper = {
     return  ball.y < brick.y + brick.height &&  ball.x + ball.width > brick.x && ball.x < brick.x + brick.width;
   },
 
-  collidesPaddle: function(ball, brick) {
-    return  ball.y + ball.width> brick.y &&  ball.x + ball.width > brick.x && ball.x < brick.x + brick.width;
+  collidesPaddle: function(ball, paddle) {
+    //return  ball.y + ball.width> brick.y &&  ball.x + ball.width > brick.x && ball.x < brick.x + brick.width;
+    return this.intersects(ball, paddle);
+  },
+
+  /* CODE TAKEN FROM : https://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection */
+  intersects : function(circle, rect)
+ {
+      circleDistance_x = Math.abs(circle.x+circle.width/2 - (rect.x+rect.width/2)); 
+      circleDistance_y = Math.abs(circle.y+circle.width/2 - (rect.y+rect.height/2));
+
+      if (circleDistance_x > (rect.width/2 + circle.width/2)) { return false; }
+      if (circleDistance_y > (rect.height/2 + circle.width/2)) { return false; }
+
+      if (circleDistance_x <= (rect.width/2)) { return true; } 
+      if (circleDistance_y <= (rect.height/2)) { return true; }
+
+      cornerDistance_sq = Math.pow(circleDistance_x + rect.width/2, 2) +
+                          Math.pow(circleDistance_y + rect.height/2, 2);
+
+      return (cornerDistance_sq <= Math.pow(circle.width/2,2));
   }
 }
 
@@ -313,6 +374,11 @@ class Ball extends GameObject {
     this.y += this.dy;
   }
 
+  setDiameter(d){
+    this.width = d;
+    this.height = d;
+  }
+
   checkCollitionWallsX(){
     return this.x + this.width > width - Settings.SPACING || this.x < Settings.SPACING
   }
@@ -331,15 +397,21 @@ class Paddle extends GameObject{
     super(x,y,w,h);
     this.displayWidth = w;
     this.displayHeight = h;
+    this.speedFactor = 1;
+    this.dx = Settings.PADDLE_SPEED;
   }
 
   render() {
     fill(245);
-    rect(this.x, this.y, this.displayWidth, this.displayHeight);
+    rect(this.x, this.y, this.width, this.height);
   }
 
-  move(dx){
-    this.x += dx;
+  move(direction){
+    this.x += this.dx*direction;
+  }
+
+  updateSpeed(){
+    this.dx += 0.5;
   }
 }
 
@@ -374,7 +446,10 @@ class Effect {
   }
 
   render() {
+    // UNDER DEVELOPMENT
+    /*
     if(this.active && this.renderFunc !== null)
-      this.renderFunc();
+      this.renderFunc(); */
+
   }
 }
