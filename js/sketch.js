@@ -49,7 +49,9 @@ function preload() {
 
 // SETUP: Run ONCE
 function setup() {
-  createCanvas(c_width, c_height);
+  let canvas = createCanvas(c_width, c_height);
+
+  canvas.parent('sketch-holder');
 
   textSize(100);
   ellipseMode(CORNER);

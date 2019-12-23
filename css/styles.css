@@ -1,9 +1,19 @@
 html, body {
     height: 100%;
+    background: #161616;
+    color: #e9c46a;
+    font-size: 1.1em;
   }
 
 h1 {
-    font-size: 3em;
+    font-size: 2.5em;
+    margin: 0px;
+    padding: 0px;
+    margin-top: -6px;
+}
+
+h2 {
+    font-size: 1.5em;
     margin: 0px;
     padding: 0px;
 }
@@ -16,25 +26,61 @@ p {
     margin-top: 2px;
     margin-bottom: 25px;
 }
-body {
-    background: #161616;
-    color: #e9c46a;
+
+.body {
+
     font-family: 'Assistant', sans-serif;
     display: flex;
 
-  justify-content: center;
+    justify-content: center;
+    align-content: flex-start;
 
-  align-items: center;
-  flex-direction: column;
+    align-items: center;
+    flex-direction: column;
+}
+
+.row {
+    margin-top: 50px;
+    display: flex;
+    
+    padding: 20px;
+    justify-content: space-around;
+    width:1320px;
+}
+
+.column {
+    align-content: flex-start;
+    flex-flow: column;
+}
+
+#scoreboard {
+    background: #4b4b4b;
+   padding: 10px;
 }
 
 strong {
     font-size: 1.2em;
 }
 
-#sketch-holder {
-    display: block;
-}
 
-#wrapper {
-}
+dl {
+    display: flex;
+    flex-flow: row wrap;
+    border: solid #333;
+    border-width: 1px 1px 0 0;
+  }
+  dt {
+    flex-basis: 50%;
+    padding: 2px 4px;
+    background: #333;
+    color: #fff;
+  }
+  dd {
+    flex-basis: 40%;
+    flex-grow: 1;
+    margin: 0;
+    padding: 2px 4px;
+    border-bottom: 1px solid #333;
+  }
+
+
