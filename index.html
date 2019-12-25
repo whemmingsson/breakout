@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="css/styles.css?v=1.0">
 
   <script src="//code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-
+  <script src="//cdn.jsdelivr.net/npm/js-cookie@beta/dist/js.cookie.min.js"></script>
   <script src="js/lib/p5.min.js"></script>
   <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.1/addons/p5.dom.min.js"></script> -->
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.1/addons/p5.sound.min.js"></script> -->
@@ -49,24 +49,32 @@
 
     <div class="row">
       <div class="column">
-      <div id="sketch-holder"></div>
-    </div>
+        <div id="sketch-holder"></div>
+      </div>
 
-    <div class="column">
-      <h1>Breakout v1.3</h1>
-      <p>Press
+      <div class="column">
+        <h1>Breakout v1.3</h1>
+        <p>Press
           <strong>SPACE</strong> to launch the ball, or pause the game.
           <br/> To reset a game after game over, press
           <strong>SPACE</strong>.
           <br/> To reset a game in progress, press
           <strong>R</strong>
-      <div id="scoreboard">
-        <h2>High score</h3>
-        <dl>
+          <div id="scoreboard" class="box">
+            <h2>High score</h3>
+              <div>
+                <dl>
 
-        </dl>
+                </dl>
+              </div>
+            </div>
+          
+            <div class="box" id="user">
+          <h3>Current user: <span>anonymous</span></h3>
+          <input type="text" id="txtUser" /> 
+          <button id="btnLogin">Login</button>
+          </div>
       </div>
-    </div>
     </div>
   </div>
 

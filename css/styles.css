@@ -17,6 +17,12 @@ h2 {
     margin: 0px;
     padding: 0px;
 }
+
+h3 {
+    font-size: 1.1em;
+    margin: 0px;
+    padding: 0px;
+}
 sub {
     font-size: 0.5em;
 }
@@ -53,9 +59,14 @@ p {
     flex-flow: column;
 }
 
-#scoreboard {
+.box {
     background: #4b4b4b;
    padding: 10px;
+   margin-bottom: 10px;
+}
+
+.error {
+    color: #e76f51;
 }
 
 strong {
